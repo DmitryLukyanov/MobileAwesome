@@ -1,0 +1,9 @@
+{
+  "solution": {
+    "path": "MobileAwesomeApp.sln",
+    "projects": [
+      "MobileAwesomeApp\\MobileAwesomeApp.csproj",
+      "MobileAwesomeApp.iOS\\MobileAwesomeApp.iOS.csproj",
+    ]
+  }
+}

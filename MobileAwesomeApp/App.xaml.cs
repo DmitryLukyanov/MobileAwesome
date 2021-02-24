@@ -1,9 +1,5 @@
-﻿using System;
-using Autofac;
-using MobileAwesomeApp.Infrastructure;
-using MobileAwesomeApp.Services;
+﻿using MobileAwesomeApp.Infrastructure;
 using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
 
 namespace MobileAwesomeApp
 {
@@ -13,9 +9,9 @@ namespace MobileAwesomeApp
         {
             InitializeComponent();
 
-            var res = DI.Container.Resolve<IRestaurantService>().GetRestaurantsAsync("Wild Asia").GetAwaiter().GetResult();
+            DI.Initialize();
 
-            MainPage = new MainPage();
+            MainPage = new AppShell();
         }
 
         protected override void OnStart()

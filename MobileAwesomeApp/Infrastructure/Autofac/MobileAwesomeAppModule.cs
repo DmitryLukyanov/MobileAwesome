@@ -1,7 +1,12 @@
-﻿using Autofac;
+﻿using System.Linq;
+using System.Reflection;
+using Autofac;
 using MobileAwesomeApp.Infrastructure.Mongo;
 using MobileAwesomeApp.Services;
 using MongoDB.Driver;
+using Xamarin.Forms;
+using Xamarin.Forms.Internals;
+using Module = Autofac.Module;
 
 namespace MobileAwesomeApp.Infrastructure.Autofac
 {
@@ -31,6 +36,11 @@ namespace MobileAwesomeApp.Infrastructure.Autofac
                 })
                 .SingleInstance();
             builder.RegisterType<MongoClientWrapper>().AsSelf().SingleInstance();
+            builder.RegisterTypes(typeof(Page)).AsSelf();
+            Assembly.GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(type => type.FullName.EndsWith("ViewModel"))
+                    .ForEach(type => builder.RegisterType(type).AsSelf());
         }
     }
 }

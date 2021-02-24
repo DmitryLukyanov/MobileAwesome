@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson.Serialization.Conventions;
+using MongoDB.Driver;
 
 namespace MobileAwesomeApp.Infrastructure.Mongo
 {
@@ -16,7 +17,14 @@ namespace MobileAwesomeApp.Infrastructure.Mongo
             var apiKey = _settingsProvider.GetByKey("ApiKey");
             var apiKeyAuthArguments = _settingsProvider.GetByKey("MongoRealmConnectionStringAuthArguments");
             var mongoClientSettings = MongoClientSettings.FromConnectionString($"mongodb://_:{apiKey}@realm.mongodb.com:27020/?{apiKeyAuthArguments}");
+            ConfigureConventions();
             return new MongoClient(mongoClientSettings);
+        }
+
+        private void ConfigureConventions()
+        {
+            var pack = new ConventionPack { new CamelCaseElementNameConvention() };
+            ConventionRegistry.Register("camel-case convention", pack, _ => true);
         }
     }
 }

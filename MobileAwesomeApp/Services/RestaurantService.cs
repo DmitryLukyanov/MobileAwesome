@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using MobileAwesomeApp.Infrastructure.Mongo;
 using MobileAwesomeApp.Models;
 using MongoDB.Bson;
@@ -9,8 +9,10 @@ namespace MobileAwesomeApp.Services
 {
     public interface IRestaurantService
     {
-        IEnumerable<Restaurant> GetRestaurants(string name);
-        Neighbourhood GetNeighbourhood(string name);
+        Task<IEnumerable<Restaurant>> GetRestaurantsAsync(string name);
+        Task<IEnumerable<Restaurant>> GetRestaurantByNeighborhoodAsync(string neighborhood);
+        Task<IEnumerable<Restaurant>> GetRestaurantByCuisineAsync(string cuisine);
+        Task<IEnumerable<Neighbourhood>> GetNeighbourhoodAsync(string name);
     }
 
     public class RestaurantService : IRestaurantService
@@ -26,40 +28,48 @@ namespace MobileAwesomeApp.Services
             _restaurantCollectionNamespace = CollectionNamespace.FromFullName("sample_restaurants.restaurants");
         }
 
-        public IEnumerable<Restaurant> GetRestaurants(string name)
+        public Task<IEnumerable<Restaurant>> GetRestaurantsAsync(string name)
+        {
+            return GetEntityByFieldAsync<Restaurant>(_restaurantCollectionNamespace, field: "name", value: name);
+        }
+
+        public Task<IEnumerable<Restaurant>> GetRestaurantByNeighborhoodAsync(string neighborhood)
+        {
+            return GetEntityByFieldAsync<Restaurant>(_restaurantCollectionNamespace, field: "borough", value: neighborhood);
+        }
+
+        public Task<IEnumerable<Restaurant>> GetRestaurantByCuisineAsync(string cuisine)
+        {
+            return GetEntityByFieldAsync<Restaurant>(_restaurantCollectionNamespace, field: "cuisine", value: cuisine);
+        }
+
+        public Task<IEnumerable<Neighbourhood>> GetNeighbourhoodAsync(string name)
+        {
+            return GetEntityByFieldAsync<Neighbourhood>(_neighbourhoodCollectionNamespace, field: "name", value: name);
+        }
+
+        private async Task<IEnumerable<TEntity>> GetEntityByFieldAsync<TEntity>(CollectionNamespace collection, string field, string value)
         {
             var searchStage = BsonDocument.Parse(
                 $@"{{
                     '$search': {{
                         'text': {{
-                            'query': '{name}', 
-                            'path': 'name', 
+                            'query': '{value}', 
+                            'path': '{field}', 
                             'fuzzy': {{
                                 'maxEdits': 1
                             }}
                         }}
                     }}
                 }}");
-            var restaurants = _client
-                .GetCollection<Restaurant>(_restaurantCollectionNamespace)
-                .Aggregate()
-                .AppendStage<Restaurant>(searchStage)
-                .ToList();
-            
-            return restaurants;
-        }
+            var pipeline = new EmptyPipelineDefinition<TEntity>()
+                .AppendStage<TEntity, TEntity, TEntity>(searchStage);
+            var entities = await _client
+                .GetCollection<TEntity>(collection)
+                .AggregateAsync(pipeline)
+                .ConfigureAwait(false);
 
-        public IEnumerable<Restaurant> GetRestaurantByCuisine(string cuisine)
-        {
-            var restaurants = _client.GetCollection<Restaurant>(_restaurantCollectionNamespace).Find(c => c.Cuisine == cuisine).ToList();
-            return restaurants;
-        }
-
-        public Neighbourhood GetNeighbourhood(string name)
-        {
-            var neighbourhoodCollection = _client.GetCollection<Neighbourhood>(_neighbourhoodCollectionNamespace);
-            var neighbourhood = neighbourhoodCollection.Find(c => c.Name == name).SingleOrDefault();
-            return neighbourhood;
+            return await entities.ToListAsync().ConfigureAwait(false);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace MobileAwesomeApp
         {
             InitializeComponent();
 
-            var res = DI.Container.Resolve<IRestaurantService>().GetRestaurants("Wild Asia");
+            var res = DI.Container.Resolve<IRestaurantService>().GetRestaurantsAsync("Wild Asia").GetAwaiter().GetResult();
 
             MainPage = new MainPage();
         }

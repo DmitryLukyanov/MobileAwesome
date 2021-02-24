@@ -2,13 +2,14 @@
 using System.Linq;
 using MobileAwesomeApp.Infrastructure.Mongo;
 using MobileAwesomeApp.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace MobileAwesomeApp.Services
 {
     public interface IRestaurantService
     {
-        Restaurant GetRestaurant(string name);
+        IEnumerable<Restaurant> GetRestaurants(string name);
         Neighbourhood GetNeighbourhood(string name);
     }
 
@@ -25,10 +26,27 @@ namespace MobileAwesomeApp.Services
             _restaurantCollectionNamespace = CollectionNamespace.FromFullName("sample_restaurants.restaurants");
         }
 
-        public Restaurant GetRestaurant(string name)
+        public IEnumerable<Restaurant> GetRestaurants(string name)
         {
-            var restaurant = _client.GetCollection<Restaurant>(_restaurantCollectionNamespace).Find(c=>c.Name == name).Single();
-            return restaurant;
+            var searchStage = BsonDocument.Parse(
+                $@"{{
+                    '$search': {{
+                        'text': {{
+                            'query': '{name}', 
+                            'path': 'name', 
+                            'fuzzy': {{
+                                'maxEdits': 1
+                            }}
+                        }}
+                    }}
+                }}");
+            var restaurants = _client
+                .GetCollection<Restaurant>(_restaurantCollectionNamespace)
+                .Aggregate()
+                .AppendStage<Restaurant>(searchStage)
+                .ToList();
+            
+            return restaurants;
         }
 
         public IEnumerable<Restaurant> GetRestaurantByCuisine(string cuisine)

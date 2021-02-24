@@ -13,7 +13,7 @@ namespace MobileAwesomeApp
         {
             InitializeComponent();
 
-            var res = DI.Container.Resolve<IRestaurantService>().GetNeighbourhood("Woodhaven");
+            var res = DI.Container.Resolve<IRestaurantService>().GetRestaurants("Wild Asia");
 
             MainPage = new MainPage();
         }

@@ -1,4 +1,7 @@
 ﻿using System;
+using Autofac;
+using MobileAwesomeApp.Infrastructure;
+using MobileAwesomeApp.Services;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -9,6 +12,8 @@ namespace MobileAwesomeApp
         public App()
         {
             InitializeComponent();
+
+            var res = DI.Container.Resolve<IRestaurantService>().GetRestaurant("Wild Asia");
 
             MainPage = new MainPage();
         }

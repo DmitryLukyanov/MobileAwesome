@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using MobileAwesomeApp.Infrastructure.Mongo;
+using MobileAwesomeApp.Services;
 using MongoDB.Driver;
 
 namespace MobileAwesomeApp.Infrastructure.Autofac
@@ -15,7 +16,8 @@ namespace MobileAwesomeApp.Infrastructure.Autofac
 
             builder
                 .RegisterTypes(
-                    typeof(HardcodedSettingsProvider))
+                    typeof(HardcodedSettingsProvider),
+                    typeof(RestaurantService))
                 .AsImplementedInterfaces()
                 .SingleInstance();
 
@@ -28,6 +30,7 @@ namespace MobileAwesomeApp.Infrastructure.Autofac
                     return client;
                 })
                 .SingleInstance();
+            builder.RegisterType<MongoClientWrapper>().AsSelf().SingleInstance();
         }
     }
 }

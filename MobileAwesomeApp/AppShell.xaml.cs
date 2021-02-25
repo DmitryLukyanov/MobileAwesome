@@ -10,7 +10,7 @@ namespace MobileAwesomeApp
         public AppShell()
         {
             InitializeComponent();
-            //Routing.RegisterRoute(nameof(MainPage), typeof(MainPage));
+            Routing.RegisterRoute(nameof(RestaurantsPage), typeof(RestaurantsPage));
             Routing.RegisterRoute(nameof(NeighbourhoodsPage), typeof(NeighbourhoodsPage));
         }
     }

@@ -10,6 +10,7 @@
             <Label Text="Mobile Awesome" HorizontalTextAlignment="Center" TextColor="White" FontSize="36"/>
         </Frame>
 
+        <Button Text="Restaurants" Clicked="ShowRestaurants" />
         <Button Text="Neighbourhoods" Clicked="ShowNeighbourhoods" />
 
     </StackLayout>

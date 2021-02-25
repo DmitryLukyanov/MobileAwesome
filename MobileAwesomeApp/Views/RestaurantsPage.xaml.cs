@@ -1,13 +1,13 @@
-using MobileAwesomeApp.ViewModels;
+﻿using MobileAwesomeApp.ViewModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
 namespace MobileAwesomeApp.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class NeighbourhoodsPage : ContentPage
+    public partial class RestaurantsPage : ContentPage
     {
-        public NeighbourhoodsPage()
+        public RestaurantsPage()
         {
             InitializeComponent();
         }
@@ -16,7 +16,7 @@ namespace MobileAwesomeApp.Views
         {
             base.OnAppearing();
 
-            var viewModel = DependencyService.Resolve<NeighbourhoodListViewModel>();
+            var viewModel = DependencyService.Resolve<RestaurantsListViewModel>();
             BindingContext = viewModel;
             await viewModel.Render();
         }

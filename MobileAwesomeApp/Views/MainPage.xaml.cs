@@ -12,6 +12,11 @@ namespace MobileAwesomeApp.Views
             InitializeComponent();
         }
 
+        private async void ShowRestaurants(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync(nameof(RestaurantsPage));
+        }
+
         private async void ShowNeighbourhoods(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync(nameof(NeighbourhoodsPage));

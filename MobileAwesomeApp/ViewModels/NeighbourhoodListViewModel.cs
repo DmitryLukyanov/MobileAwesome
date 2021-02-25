@@ -1,33 +1,29 @@
 using System.Collections.ObjectModel;
-using System.Linq;
-using MobileAwesomeApp.Models;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
+using System.Threading.Tasks;
+using MobileAwesomeApp.Services;
 
 namespace MobileAwesomeApp.ViewModels
 {
     public class NeighbourhoodListViewModel
     {
-        private readonly IMongoClient _mongoClient;
+        private readonly IRestaurantService _restaurantService;
+        private readonly ObservableCollection<NeighbourhoodViewModel> _neighbourhoods = new ObservableCollection<NeighbourhoodViewModel>();
 
-        public NeighbourhoodListViewModel(IMongoClient mongoClient)
+        public NeighbourhoodListViewModel(IRestaurantService restaurantService)
         {
-            _mongoClient = mongoClient;
+            _restaurantService = restaurantService;
         }
 
-        public ObservableCollection<NeighbourhoodViewModel> Neighbourhoods => GetNeighbourhoods();
+        public ObservableCollection<NeighbourhoodViewModel> Neighbourhoods => _neighbourhoods;
 
-        private ObservableCollection<NeighbourhoodViewModel> GetNeighbourhoods()
+        public async Task Render()
         {
-            var db = _mongoClient.GetDatabase("sample_restaurants");
-            var coll = db.GetCollection<Neighbourhood>("neighborhoods");
-            var query = from neighbourhood in coll.AsQueryable()
-                        orderby neighbourhood.Name
-                        select neighbourhood;
-            var results = IAsyncCursorSourceExtensions.ToList(query);
-            var viewModels = new ObservableCollection<NeighbourhoodViewModel>();
-            results.ForEach(result => viewModels.Add(new NeighbourhoodViewModel(result)));
-            return viewModels;
+            var results = await _restaurantService.GetNeighbourhoodsAsync();
+            Neighbourhoods.Clear();
+            foreach (var result in results)
+            {
+                Neighbourhoods.Add(new NeighbourhoodViewModel(result));
+            }
         }
     }
 }

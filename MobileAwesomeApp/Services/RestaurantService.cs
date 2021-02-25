@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MobileAwesomeApp.Infrastructure.Mongo;
 using MobileAwesomeApp.Models;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace MobileAwesomeApp.Services
 {
@@ -14,11 +18,9 @@ namespace MobileAwesomeApp.Services
         Task<IEnumerable<Restaurant>> GetRestaurantsAsync(string name);
         Task<IEnumerable<Restaurant>> GetRestaurantByNeighborhoodAsync(string neighborhood);
         Task<IEnumerable<Restaurant>> GetRestaurantByCuisineAsync(string cuisine);
-        
+
         Task<IEnumerable<Neighbourhood>> GetNeighbourhoodsAsync(string name);
         Task<IEnumerable<Neighbourhood>> GetNeighbourhoodsAsync();
-        
-        Task<IEnumerable<Restaurant>> GetEntitiesByGeoWithinAsync();
     }
 
     public class RestaurantService : IRestaurantService
@@ -41,6 +43,50 @@ namespace MobileAwesomeApp.Services
             var cursor = await _client.GetCollection<Restaurant>(_restaurantCollectionNamespace).FindAsync(FilterDefinition<Restaurant>.Empty).ConfigureAwait(false);
             var value = await cursor.ToListAsync().ConfigureAwait(false);
             return value.Take(10);  // temporary fix
+            //return await GetRestaurantsGeoWithinAsync(
+            //    "location", 
+            //    -73.9740, 
+            //    40.7813, 
+            //    1609,
+            //    (c => c.Name, "Chez", 1),
+            //    (c => c.Cuisine, "French", default)
+            //    )
+            //    .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<Restaurant>> GetRestaurantsGeoWithinAsync(
+            FieldDefinition<Restaurant> locationFieldDefinition,
+            double x,
+            double y,
+            double radius,
+            params (Expression<Func<Restaurant, string>> Field, string Value, int? MaxEdits)[] fieldMustFilters)
+        {
+            return await GetEntitiesByGeoWithinAsync<Restaurant>(
+                _restaurantCollectionNamespace1,
+                "Search_Point",
+                BsonDocument.Parse($@"
+{{
+    geoWithin: 
+    {{
+        circle: 
+        {{
+            center:
+            {{
+                type: 'Point',
+                coordinates:[{x}, {y}]
+            }},
+            radius: {radius}
+        }},
+        path: '{GetFieldName<Restaurant>(locationFieldDefinition)}'
+    }}
+}}"),
+                 fieldMustFilters.Select(c =>
+                 {
+                     var fieldDefinition = (FieldDefinition<Restaurant, string>)new ExpressionFieldDefinition<Restaurant, string>(c.Field);
+                     return (fieldDefinition, c.Value, c.MaxEdits);
+                 }).ToArray()
+            ).ConfigureAwait(false);
+
         }
 
         public Task<IEnumerable<Restaurant>> GetRestaurantsAsync(string name)
@@ -69,33 +115,22 @@ namespace MobileAwesomeApp.Services
             return neighbourhoods;
         }
 
-        public async Task<IEnumerable<Restaurant>> GetEntitiesByGeoWithinAsync()
+        public async Task<IEnumerable<TEntity>> GetEntitiesByGeoWithinAsync<TEntity>(
+            CollectionNamespace collectionNamespace,
+            string indexName,
+            BsonDocument shouldAggregateStage,
+            params (FieldDefinition<TEntity, string> Field, string Value, int? MaxEdits)[] mustFilters)
         {
-            var indexName = "Search_Point";
-            var must = BsonArray.Create(
-                new[] 
-                {
-                    CreateTextFilter(field: "cuisine", value: "French"),
-                    CreateTextFilter(field: "name", value: "Chez", maxEdits: 1),
-                });
-            var should =
-                //Builders<BsonDocument>.Filter.GeoWithin
-                BsonDocument.Parse(@"{
-    geoWithin: {
-                circle:
-                {
-                    center:
-                    {
-                        type: 'Point',
-                coordinates:[-73.9740, 40.7813]
-            },
-            radius: 1609
-                },
-        path: 'location'
-    }
-        }
-");
-            var result = await GetEntitiesByCompoundQueryAsync<Restaurant>(_restaurantCollectionNamespace1, indexName, must, should).ConfigureAwait(false);
+            var mustBsonArray = new BsonArray();
+            foreach (var mustFilter in mustFilters)
+            {
+                var entitySerializer = BsonSerializer.LookupSerializer<TEntity>();
+                var field = mustFilter.Field.Render(entitySerializer, BsonSerializer.SerializerRegistry);
+                mustBsonArray.Add(CreateTextFilter(field.FieldName, value: mustFilter.Value, mustFilter.MaxEdits));
+            }
+
+            var should = shouldAggregateStage;
+            var result = await GetEntitiesByCompoundQueryAsync<TEntity>(collectionNamespace, indexName, mustBsonArray, should).ConfigureAwait(false);
             return result;
         }
 
@@ -105,13 +140,19 @@ namespace MobileAwesomeApp.Services
         {
             var searchStage = new BsonDocument
             {
-                { "index", indexName },
                 {
-                    "compound",
+                    "$search",
                     new BsonDocument
                     {
-                        { "must", must },
-                        { "should", should }
+                        { "index", indexName },
+                        {
+                            "compound",
+                            new BsonDocument
+                            {
+                                { "must", must },
+                                { "should", should }
+                            }
+                        }
                     }
                 }
             };
@@ -147,7 +188,7 @@ namespace MobileAwesomeApp.Services
             return await entities.ToListAsync().ConfigureAwait(false);
         }
 
-        private BsonDocument CreateTextFilter(string field, string value, int? maxEdits = null)
+        private BsonDocument CreateTextFilter(BsonValue field, string value, int? maxEdits = null)
         {
             return new BsonDocument
             {
@@ -162,11 +203,18 @@ namespace MobileAwesomeApp.Services
                             new BsonDocument
                             {
                                 { "maxEdits", () => maxEdits.Value, maxEdits.HasValue }
-                            }
+                            },
+                            maxEdits.HasValue
                         }
                     }
                 }
             };
+        }
+
+        private BsonValue GetFieldName<TEntity>(FieldDefinition<TEntity> field)
+        {
+            var fieldSerializer = BsonSerializer.LookupSerializer<TEntity>();
+            return field.Render(fieldSerializer, BsonSerializer.SerializerRegistry).FieldName;
         }
     }
 }

@@ -5,7 +5,6 @@ using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace MobileAwesomeApp.Models
 {
-    [BsonIgnoreExtraElements]
     public class Restaurant
     {
         public ObjectId Id { get; set; }
@@ -16,7 +15,7 @@ namespace MobileAwesomeApp.Models
         public string Name { get; set; }
         public Grade[] Grades { get; set; }
         public Address Address { get; set; }
-        //public GeoJsonPoint<GeoJson2DCoordinates> Location { get; set; }
+        public GeoJsonPoint<GeoJson2DCoordinates> Location { get; set; }
     }
 
     public class Grade

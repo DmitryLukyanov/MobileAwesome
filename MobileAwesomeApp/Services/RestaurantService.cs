@@ -8,7 +8,6 @@ using MobileAwesomeApp.Models;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using MongoDB.Driver.GeoJsonObjectModel;
 
 namespace MobileAwesomeApp.Services
 {
@@ -16,7 +15,7 @@ namespace MobileAwesomeApp.Services
     {
         Task<IEnumerable<Restaurant>> GetRestaurantsAsync();
         Task<IEnumerable<Restaurant>> GetRestaurantsAsync(string name);
-        Task<IEnumerable<Restaurant>> GetRestaurantByNeighborhoodAsync(string neighborhood);
+        Task<IEnumerable<Restaurant>> GetRestaurantByBoroughAsync(string borough);
         Task<IEnumerable<Restaurant>> GetRestaurantByCuisineAsync(string cuisine);
 
         Task<IEnumerable<Neighbourhood>> GetNeighbourhoodsAsync(string name);
@@ -38,20 +37,22 @@ namespace MobileAwesomeApp.Services
             _restaurantCollectionNamespace1 = CollectionNamespace.FromFullName("sample_restaurants.restaurants1");
         }
 
-        public async Task<IEnumerable<Restaurant>> GetRestaurantsAsync()
+        public async Task<IEnumerable<Restaurant>> GetRestaurantsByNeighbourhood(string neighbourhoodName)
         {
-            var cursor = await _client.GetCollection<Restaurant>(_restaurantCollectionNamespace).FindAsync(FilterDefinition<Restaurant>.Empty).ConfigureAwait(false);
-            var value = await cursor.ToListAsync().ConfigureAwait(false);
-            return value.Take(10);  // temporary fix
-            //return await GetRestaurantsGeoWithinAsync(
-            //    "location", 
-            //    -73.9740, 
-            //    40.7813, 
-            //    1609,
-            //    (c => c.Name, "Chez", 1),
-            //    (c => c.Cuisine, "French", default)
-            //    )
-            //    .ConfigureAwait(false);
+            var neighbourhoods = await GetNeighbourhoodsAsync(neighbourhoodName).ConfigureAwait(false);
+
+            var neighbourhoodGeometry = neighbourhoods.SingleOrDefault().Geometry;
+            var filter = Builders<Restaurant>.Filter.GeoWithin(r => r.Location, neighbourhoodGeometry);
+            var restaurantsCollection = _client.GetCollection<Restaurant>(_restaurantCollectionNamespace);
+            var restaurantsCursor = await restaurantsCollection .FindAsync(filter).ConfigureAwait(false);
+            return await restaurantsCursor.ToListAsync().ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<Restaurant>> GetRestaurantsAsync() //TODO: add paging
+        {
+            var cursor = await _client.GetCollection<Restaurant>(_restaurantCollectionNamespace1).FindAsync(FilterDefinition<Restaurant>.Empty).ConfigureAwait(false);
+            var result = await cursor.ToListAsync().ConfigureAwait(false);
+            return result.Take(10);
         }
 
         public async Task<IEnumerable<Restaurant>> GetRestaurantsGeoWithinAsync(
@@ -94,9 +95,9 @@ namespace MobileAwesomeApp.Services
             return GetEntitiesByFieldAsync<Restaurant>(_restaurantCollectionNamespace, field: "name", value: name);
         }
 
-        public Task<IEnumerable<Restaurant>> GetRestaurantByNeighborhoodAsync(string neighborhood)
+        public Task<IEnumerable<Restaurant>> GetRestaurantByBoroughAsync(string borough)
         {
-            return GetEntitiesByFieldAsync<Restaurant>(_restaurantCollectionNamespace, field: "borough", value: neighborhood);
+            return GetEntitiesByFieldAsync<Restaurant>(_restaurantCollectionNamespace, field: "borough", value: borough);
         }
 
         public Task<IEnumerable<Restaurant>> GetRestaurantByCuisineAsync(string cuisine)
@@ -124,9 +125,8 @@ namespace MobileAwesomeApp.Services
             var mustBsonArray = new BsonArray();
             foreach (var mustFilter in mustFilters)
             {
-                var entitySerializer = BsonSerializer.LookupSerializer<TEntity>();
-                var field = mustFilter.Field.Render(entitySerializer, BsonSerializer.SerializerRegistry);
-                mustBsonArray.Add(CreateTextFilter(field.FieldName, value: mustFilter.Value, mustFilter.MaxEdits));
+                var field = GetFieldName<TEntity>(mustFilter.Field);
+                mustBsonArray.Add(CreateTextFilter(field, value: mustFilter.Value, mustFilter.MaxEdits));
             }
 
             var should = shouldAggregateStage;

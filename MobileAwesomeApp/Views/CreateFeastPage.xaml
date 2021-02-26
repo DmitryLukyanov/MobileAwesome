@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MobileAwesomeApp.Views.CreateFeastPage">
+    <ContentPage.Content>
+        <StackLayout>
+            <Label Text="Feast Created" FontSize="Title" HorizontalTextAlignment="Center"/>
+            <Frame BackgroundColor="#2196F3" Padding="24" CornerRadius="0">
+                <StackLayout>
+                    <Label x:Name="FeastKeyLabel" Text="Generating your feast key..." HorizontalTextAlignment="Center" TextColor="White" FontFamily="MarkerFelt-Thin" FontSize="Title" FontAttributes="Bold" />
+                </StackLayout>
+            </Frame>
+            <Label Text="Share this code with your friends so they can join your feast!" HorizontalTextAlignment="Center"/>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

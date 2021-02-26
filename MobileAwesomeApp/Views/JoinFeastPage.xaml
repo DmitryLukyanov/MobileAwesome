@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MobileAwesomeApp.Views.JoinFeastPage">
+    <ContentPage.Content>
+        <StackLayout>
+            <Label Text="Join a Feast" FontSize="Title" HorizontalTextAlignment="Center"/>
+            <Label Text="Enter your four (4) word feast key:" HorizontalTextAlignment="Center"/>
+            <Frame BackgroundColor="#2196F3" Padding="24" CornerRadius="0">
+                <StackLayout HorizontalOptions="FillAndExpand">
+                    <Entry Text="{Binding Foods[0]}" Placeholder="Food1" ClearButtonVisibility="WhileEditing"/>
+                    <Entry Text="{Binding Foods[1]}" Placeholder="Food2" ClearButtonVisibility="WhileEditing"/>
+                    <Entry Text="{Binding Foods[2]}" Placeholder="Food3" ClearButtonVisibility="WhileEditing"/>
+                    <Entry Text="{Binding Foods[3]}" Placeholder="Food4" ClearButtonVisibility="WhileEditing"/>
+                </StackLayout>
+            </Frame>
+            <Button Text="Join the feast..." Clicked="JoinFeast"/>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

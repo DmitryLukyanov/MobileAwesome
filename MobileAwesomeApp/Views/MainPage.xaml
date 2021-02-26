@@ -7,11 +7,23 @@
 
     <StackLayout>
         <Frame BackgroundColor="#2196F3" Padding="24" CornerRadius="0">
-            <Label Text="Mobile Awesome" HorizontalTextAlignment="Center" TextColor="White" FontSize="36"/>
+            <StackLayout>
+                <Label HorizontalTextAlignment="Center" TextColor="White" FontFamily="MarkerFelt-Thin" FontSize="64" FontAttributes="Bold" Rotation="-10">
+                    <Label.Text>
+                        Food
+                        with
+                        Friends
+                    </Label.Text>
+                </Label>
+            </StackLayout>
         </Frame>
 
-        <Button Text="Restaurants" Clicked="ShowRestaurants" />
-        <Button Text="Neighbourhoods" Clicked="ShowNeighbourhoods" />
+        <Button Text="Create a feast..." Clicked="CreateFeast" />
+        <Button Text="Join an existing feast..." Clicked="JoinFeast" />
+        <Button Text="Show my feasts..." Clicked="ShowFeasts" />
+
+        <Button Text="Show restaurants..." Clicked="ShowRestaurants" />
+        <Button Text="Show neighbourhoods..." Clicked="ShowNeighbourhoods" />
 
     </StackLayout>
 

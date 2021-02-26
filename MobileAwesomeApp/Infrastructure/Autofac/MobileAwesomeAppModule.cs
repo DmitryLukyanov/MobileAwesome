@@ -22,8 +22,9 @@ namespace MobileAwesomeApp.Infrastructure.Autofac
             builder
                 .RegisterTypes(
                     typeof(HardcodedSettingsProvider),
-                    typeof(RestaurantService),
-                    typeof(GeoService))
+                    typeof(FeastService),
+                    typeof(GeoService),
+                    typeof(RestaurantService))
                 .AsImplementedInterfaces()
                 .SingleInstance();
 

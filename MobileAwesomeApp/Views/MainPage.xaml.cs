@@ -21,5 +21,20 @@ namespace MobileAwesomeApp.Views
         {
             await Shell.Current.GoToAsync(nameof(NeighbourhoodsPage));
         }
+
+        private async void CreateFeast(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync(nameof(CreateFeastPage));
+        }
+
+        private async void JoinFeast(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync(nameof(JoinFeastPage));
+        }
+
+        private async void ShowFeasts(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync(nameof(ShowFeastsPage));
+        }
     }
 }

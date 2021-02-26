@@ -35,5 +35,10 @@
     <string>Assets.xcassets/AppIcon.appiconset</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Required to locate restaurants.</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+      <key>NSAllowsArbitraryLoads</key>
+      <true/>
+    </dict>
   </dict>
 </plist>

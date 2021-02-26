@@ -6,17 +6,6 @@
              ios:Page.UseSafeArea="true"
              x:Class="MobileAwesomeApp.Views.RestaurantsPage">
     <ContentPage.Content>
-        <StackLayout>
-            <Label Text="Restaurants"
-                   VerticalOptions="CenterAndExpand"
-                   HorizontalOptions="CenterAndExpand" />
-            <ListView ItemsSource="{Binding Restaurants}">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:RestaurantViewModel">
-                        <TextCell Text="{Binding Name}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </StackLayout>
+       <!--TODO: replace code-behind initialization-->
     </ContentPage.Content>
 </ContentPage>

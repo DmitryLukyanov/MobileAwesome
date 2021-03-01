@@ -1,41 +1,77 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using MobileAwesomeApp.Models;
 using MobileAwesomeApp.Services;
-using Xamarin.Forms;
+using Xamarin.Forms.Extended;
 
 namespace MobileAwesomeApp.ViewModels
 {
-    public class RestaurantsListViewModel
+    public class RestaurantsListViewModel : INotifyPropertyChanged
     {
+        private bool _isBusy;
+        private const int PageSize = 10;
+
         private readonly IRestaurantService _restaurantService;
-        private readonly ObservableCollection<RestaurantViewModel> _restaurants = new ObservableCollection<RestaurantViewModel>();
 
         public RestaurantsListViewModel(IRestaurantService restaurantService)
         {
             _restaurantService = restaurantService;
+            
+            Items = new InfiniteScrollCollection<RestaurantViewModel>
+            {
+                OnLoadMore = async () =>
+                {
+                    IsBusy = true;
+
+                    // load the next page
+                    var page = Items.Count / PageSize;
+
+                    var items = await _restaurantService.GetRestaurantsAsync(page: page, pageSize : PageSize);
+
+                    IsBusy = false;
+
+                    // return the items that need to be added
+                    return CastRestaurantsToViewModel(items);
+                },
+                OnCanLoadMore = () =>
+                {
+                    return true;
+                }
+            };
         }
 
-        public ObservableCollection<RestaurantViewModel> Restaurants => _restaurants;
+        public InfiniteScrollCollection<RestaurantViewModel> Items { get; }
 
-        public HtmlWebViewSource Html
+        public bool IsBusy
         {
-            get
+            get => _isBusy;
+            set
             {
-                var source = @"<iframe style=""background: #FFFFFF;border: none;border-radius: 2px;box-shadow: 0 2px 10px 0 rgba(70, 76, 79, .2);"" width=""640"" height=""480"" src=""https://charts.mongodb.com/charts-mobileawesome-ldwiw/embed/charts?id=1a56c5d5-0a18-4f5f-9adf-2aef9b453e8d&theme=light""></iframe>";
-                var htmlSource = new HtmlWebViewSource();
-                htmlSource.Html = source;
-                return htmlSource;
+                _isBusy = value;
+                OnPropertyChanged();
             }
         }
 
-        public async Task Render()
+        public async Task RenderAsync()
         {
-            var results = await _restaurantService.GetRestaurantsAsync();
-            Restaurants.Clear();
-            foreach (var result in results)
-            {
-                Restaurants.Add(new RestaurantViewModel(result));
-            }
+            var items = await _restaurantService.GetRestaurantsAsync(page: 0, pageSize: PageSize);
+
+            Items.AddRange(CastRestaurantsToViewModel(items));
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private IEnumerable<RestaurantViewModel> CastRestaurantsToViewModel(IEnumerable<Restaurant> restaurants)
+        {
+            return restaurants.Select(r => new RestaurantViewModel(r));
         }
     }
 }

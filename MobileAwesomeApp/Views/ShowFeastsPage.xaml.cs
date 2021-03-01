@@ -55,9 +55,8 @@ namespace MobileAwesomeApp.Views
         {
             base.OnAppearing();
 
-            var viewModel = DependencyService.Resolve<RestaurantsListViewModel>();
+            var viewModel = DependencyService.Resolve<ShowFestsViewModel>();
             BindingContext = viewModel;
-            await viewModel.Render();
         }
     }
 }

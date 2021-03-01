@@ -1,22 +1,50 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:ios="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core"
-             xmlns:vm="clr-namespace:MobileAwesomeApp.ViewModels"
+             xmlns:ios="clr-namespace:Xamarin.Forms.PlatformConfiguration.iOSSpecific;assembly=Xamarin.Forms.Core" xmlns:extended="clr-namespace:Xamarin.Forms.Extended;assembly=Xamarin.Forms.Extended.InfiniteScrolling"
              ios:Page.UseSafeArea="true"
              x:Class="MobileAwesomeApp.Views.RestaurantsPage">
     <ContentPage.Content>
+
         <StackLayout>
-            <Label Text="Restaurants"
-                   VerticalOptions="CenterAndExpand"
-                   HorizontalOptions="CenterAndExpand" />
-            <ListView ItemsSource="{Binding Restaurants}">
+            <Label Text="Restaurants" FontSize="15"  Margin="5" />
+
+            <ListView ItemsSource="{Binding Items}" CachingStrategy="RecycleElement" HasUnevenRows="True">
+
+                <ListView.Behaviors>
+                    <extended:InfiniteScrollBehavior IsLoadingMore="{Binding IsBusy}" />
+                </ListView.Behaviors>
+
                 <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:RestaurantViewModel">
-                        <TextCell Text="{Binding Name}" />
+                    <DataTemplate>
+                        <ViewCell>
+                            <Grid Padding="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Label Text="{Binding Name}" FontSize="14" TextColor="Black" Grid.Column="0"/>
+                                <Label Text="{Binding Cuisine}" FontSize="14" TextColor="Black" Grid.Column="1"/>
+                            </Grid>
+                        </ViewCell>
                     </DataTemplate>
                 </ListView.ItemTemplate>
+
+                <ListView.Footer>
+                    <Grid Padding="6" IsVisible="{Binding IsBusy}">
+                        <!-- set the footer to have a zero height when invisible -->
+                        <Grid.Triggers>
+                            <Trigger TargetType="Grid" Property="IsVisible" Value="False">
+                                <Setter Property="HeightRequest" Value="0" />
+                            </Trigger>
+                        </Grid.Triggers>
+                        <!-- the loading content -->
+                        <Label Text="Loading..."  FontSize="15" FontAttributes="Bold" VerticalOptions="Center" HorizontalOptions="Center" />
+                    </Grid>
+                </ListView.Footer>
+
             </ListView>
+
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

@@ -13,7 +13,7 @@ namespace MobileAwesomeApp.Services
 {
     public interface IRestaurantService
     {
-        Task<IEnumerable<Restaurant>> GetRestaurantsAsync();
+        Task<IEnumerable<Restaurant>> GetRestaurantsAsync(int page, int pageSize);
         Task<IEnumerable<Restaurant>> GetRestaurantsAsync(string name);
         Task<IEnumerable<Restaurant>> GetRestaurantByBoroughAsync(string borough);
         Task<IEnumerable<Restaurant>> GetRestaurantByCuisineAsync(string cuisine);
@@ -48,9 +48,15 @@ namespace MobileAwesomeApp.Services
             return await restaurantsCursor.ToListAsync().ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Restaurant>> GetRestaurantsAsync() //TODO: add paging
+        public async Task<IEnumerable<Restaurant>> GetRestaurantsAsync(int page, int pageSize)
         {
-            var cursor = await _client.GetCollection<Restaurant>(_restaurantCollectionNamespace1).FindAsync(FilterDefinition<Restaurant>.Empty).ConfigureAwait(false);
+            var aggegateBuilder = new EmptyPipelineDefinition<Restaurant>()
+                .Skip(page * pageSize)
+                .Limit(pageSize);
+            var cursor = await _client
+                .GetCollection<Restaurant>(_restaurantCollectionNamespace1)
+                .AggregateAsync(aggegateBuilder)
+                .ConfigureAwait(false);
             var result = await cursor.ToListAsync().ConfigureAwait(false);
             return result.Take(10);
         }
